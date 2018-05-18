@@ -32,17 +32,13 @@ public class MixerChat : MonoBehaviour
     {
         _messagesToPrint = new List<string>();
 
-        MixerInteractive.OnParticipantStateChanged += OnParticipantStateChanged;
+        MixerInteractive.OnGoInteractive += OnGoInteractive;
         Application.runInBackground = true;
     }
 
-    private void OnParticipantStateChanged(object sender, Microsoft.Mixer.InteractiveParticipantStateChangedEventArgs e)
+    private void OnGoInteractive(object sender, Microsoft.Mixer.InteractiveEventArgs e)
     {
-        if (e.Participant.IsBroadcaster)
-        {
-            _userName = e.Participant.UserName;
-            StartCoroutine("GetChatChannelIDRoutine");
-        }
+        StartCoroutine("GetUserInfoRoutine");
     }
 
     // Update is called once per frame
@@ -70,21 +66,64 @@ public class MixerChat : MonoBehaviour
         }
     }
 
-    private IEnumerator GetChatChannelIDRoutine()
+    private IEnumerator GetUserInfoRoutine()
     {
-        string getChannelIDUrl = "https://mixer.com/api/v1/channels/" + _userName + "?fields=id";
-        using (UnityWebRequest request = UnityWebRequest.Get(getChannelIDUrl))
+        string getUserInfoUrl = "https://mixer.com/api/v1/users/current";
+        using (UnityWebRequest request = UnityWebRequest.Get(getUserInfoUrl))
         {
+            request.SetRequestHeader("Authorization", MixerInteractive.Token);
             yield return request.SendWebRequest();
             if (request.isNetworkError)
             {
-                Debug.Log("Error: Could not retrieve websocket URL. " + request.error);
+                Debug.Log("Error: Could not retrieve user info. " + request.error);
             }
             else // Success
             {
                 string channelIDRawJson = request.downloadHandler.text;
-                ParseChannelID(channelIDRawJson);
+                ParseUserInfo(channelIDRawJson);
                 StartCoroutine("InitializeCoRoutine");
+            }
+        }
+    }
+
+    private void ParseUserInfo(string userInfoRawJson)
+    {
+        using (StringReader stringReader = new StringReader(userInfoRawJson))
+        using (JsonTextReader jsonReader = new JsonTextReader(stringReader))
+        {
+            while (jsonReader.Read())
+            {
+                if (_channelID != string.Empty)
+                {
+                    break;
+                }
+                if (jsonReader.Value != null)
+                {
+                    if (jsonReader.Value.ToString() == "channel")
+                    {
+                        ParseGetUserId(jsonReader);
+                    }
+                }
+            }
+        }
+    }
+
+    private void ParseGetUserId(JsonReader jsonReader)
+    {
+        _channelID = string.Empty;
+        while (jsonReader.Read())
+        {
+            if (_channelID != string.Empty)
+            {
+                break;
+            }
+            if (jsonReader.Value != null)
+            {
+                if (jsonReader.Value.ToString() == "id")
+                {
+                    jsonReader.Read();
+                    _channelID = jsonReader.Value.ToString();
+                }
             }
         }
     }
