@@ -3,6 +3,7 @@
 This sample demonstrates how to show Mixer chat in your game.
 
 ## Getting started
+Pre-requisite: You need to have the Mixer SDK because the chat plugin references it. You can get the Mixer Unity SDK here: https://github.com/mixer/interactive-unity-plugin/releases
 
 1. Go to the releases tab and import mixerchat.unitypackage into your Unity project.
 2. Follow the instructions in the instructions.txt file.
