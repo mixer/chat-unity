@@ -8,6 +8,8 @@ Pre-requisite: You need to have the Mixer SDK because the chat plugin references
 1. Clone or download this repo and drop the ChatUnity/Assets/MixerChat folder into your project.
 2. Follow the instructions in the instructions.txt file.
 
+Note: Make sure you are NOT in test stream mode! Otherwise you will get a UACCESS error!
+
 ## Known issues
 This is a sample and does have some known issues:
 * Only works for Win32, x64 in the Editor and Standalone builds
